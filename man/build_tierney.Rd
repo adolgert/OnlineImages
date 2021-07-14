@@ -11,7 +11,11 @@ build_tierney(extent, total, level = 95)
 
 \item{total}{The total number of images from which to calculate quantiles.}
 
-\item{level}{The confidence interval, e.g. 95 or 90.}
+\item{level}{The confidence interval, e.g. 95 or 90.
+
+Once you build the object, it expects to be called `total`
+times with `quantile_add(obj, image)`, where image has
+`dims=extent`.}
 }
 \description{
 Create an object to gather quantiles.

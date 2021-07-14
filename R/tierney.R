@@ -1,17 +1,3 @@
-# Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
 
 #' Retrieve median and confidence intervals.
 #' @param base A Tierney quantile estimator.
@@ -29,6 +15,11 @@ quantiles <- function(base) {
 #' @param extent The dimensions of the image as c(rows, cols).
 #' @param total The total number of images from which to calculate quantiles.
 #' @param level The confidence interval, e.g. 95 or 90.
+#'
+#' Once you build the object, it expects to be called `total`
+#' times with `quantile_add(obj, image)`, where image has
+#' `dims=extent`.
+#'
 #' @export
 build_tierney <- function(extent, total, level = 95) {
   edge = 0.5 * (100 - level) / 100

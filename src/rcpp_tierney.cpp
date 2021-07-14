@@ -28,12 +28,29 @@ List quantile_add(List base, NumericMatrix image) {
   NumericVector buf = base["buf"];
   // dims = c(3, i, j). Params are median, fn, d0.
   NumericVector param = base["param"];
+  IntegerVector param_dim = param.attr("dim");
+  int param_dim_cnt = param_dim.length();
+  if (param_dim_cnt != 3) {
+    stop("parameter vector should have three dimensions");
+  }
+  int pc = 3; // Count of parameters, the first dimension of param.
+  if (param_dim[0] != pc) {
+    stop("parameter vector first dimension should be 3");
+  }
   IntegerVector buf_dim = buf.attr("dim");
+  if (buf_dim.length() != 3) {
+    stop("buffer of images should have three dimensions");
+  }
   int dci = buf_dim[0];
-  int ci = dci << 1;  // The number of values to keep at high and low.
+  int ci = dci >> 1;  // The number of values to keep at high and low.
   int icnt = buf_dim[1];
   int jcnt = buf_dim[2];
-  int pc = 3; // Count of parameters, the first dimension of param.
+  if (icnt != irow) {
+    stop("image rows should equal buffer rows");
+  }
+  if (jcnt != icol) {
+    stop("image cols should equal buffer cols");
+  }
 
   int n = as<int>(base["n"]);
   int total = as<int>(base["total"]);
@@ -51,16 +68,31 @@ List quantile_add(List base, NumericMatrix image) {
     // Once buffer is filled, use it to initialize stochastic approximation.
     // Also set up the buffer for confidence intervals.
     if (n == dci) {
+      std::vector<double> forsort(dci);
       for (R_xlen_t jinit = 0; jinit < jcnt; ++jinit) {
         for (R_xlen_t iinit = 0; iinit < icnt; ++iinit) {
-          NumericVector::iterator bufit = buf.begin();
           R_xlen_t column = dci * (iinit + icnt * jinit);
-          bufit += column;
-          NumericVector::iterator bufend = buf.begin();
-          bufend += dci + column;
-          std::sort(bufit, bufend);  // Does this work with Rcpp pointers?
+          Rcout << "column " << column << " dci " << dci <<
+                " i " << iinit << " j " << jinit << " len " <<
+                  buf.size() << std::endl;
+          for (R_xlen_t cpidx=0; cpidx < dci; ++cpidx) {
+            forsort[cpidx] = buf(column + cpidx);
+          }
+          std::sort(forsort.begin(), forsort.end());
+          Rcout << "sorting" << std::endl;
+          for (R_xlen_t ridx=0; ridx < dci; ++ridx) {
+            if (column + ridx >= buf.size()) {
+              stop("col is greater than buffer size");
+            }
+            Rcout << "writing to " << (column + ridx) << std::endl;
+            buf[column + ridx] = forsort[ridx];
+          }
+          //NumericVector::iterator bufit = buf.begin() + column;
+          //NumericVector::iterator bufend = buf.begin() + column + dci;
+          //std::sort(bufit, bufend);  // Does this work with Rcpp pointers?
           // Set $\xi_0$ equal to the $10\alpha$th smallest of the first ten
           // observations. \xi is the median:
+          Rcout << "median " << (column + ci) << std::endl;
           double median = 0.5 * (buf(column + ci - 1), buf(column + ci));
           // Set $d_0^{-1}$ equal to the interquantile range of the first ten
           // observations (specifically to the difference between the eigth
@@ -70,14 +102,19 @@ List quantile_add(List base, NumericMatrix image) {
           // The initial estimate $\xi_0$ of $\xi$ and $d_0$, an initial
           // estimate of $f(\xi)^{-1}$, are treated as fixed; in practice they
           // can be obtained from a small preliminary sample.
+          Rcout << "col high " << (column + high) << " low " << (column + low)
+                << std::endl;
           double fn = 0;  // Should this start at 0 or 1/d0?
           double d0 = 1.0 / buf(column + high) - buf(column + low);
-          R_xlen_t pcolumn = pc * iinit + pc * icnt * jinit;
+          R_xlen_t pcolumn = pc * (iinit + icnt * jinit);
+          Rcout << "pcolumn " << column << " pc " << pc << std::endl;
           param[0 + pcolumn] = median;
           param[1 + pcolumn] = fn;
           param[2 + pcolumn] = d0;
+          Rcout << "wrote params" << std::endl;
         }
       }
+      Rcout << "initialization done" << std::endl;
     }
   } else if (n < total) {
     // h_n = n^{-1/2}. This value is h_{n+1}.

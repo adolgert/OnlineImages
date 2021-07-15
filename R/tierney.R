@@ -4,7 +4,7 @@
 #' @export
 quantiles <- function(base) {
   median <- base$param[1, , ]
-  ci <- dim(outbound)[1] %/% 2
+  ci <- dim(base$buf)[1] %/% 2
   lower <- base$buf[ci, , ]
   upper <- base$buf[ci + 1, , ]
   list(lower = lower, median = median, upper = upper)

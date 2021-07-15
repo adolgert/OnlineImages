@@ -42,34 +42,41 @@ test_that("tierney sorts the first set of images", {
 
 
 relerr <- function(a, b, median, sigma) {
-  (b - a - median) / sigma
+  abs((b - a) / sigma)
 }
 
 
 test_that("tierney gives final estimates", {
   i <- 10
   j <- 20
-  base <- build_tierney(c(i, j), 1000L)
+  N <- 1000L
+  avg <- 3.7
+  stdev <- 1.0
+  base <- build_tierney(c(i, j), N)
   ci_cnt <- dim(base$buf)[1]
+  all <- array(0, dim = c(i, j, N))
 
-  for (ci_idx in 1:1000L) {
-    img <- array(rnorm(i*j, mean = 3.7), dim = c(i, j))
+  # Each point gets a different mean so that we know the i,j correspond.
+  means <- ((1:N) * 19937) %% 20
+  for (ci_idx in 1:N) {
+    img <- array(rnorm(i*j, mean = means), dim = c(i, j))
     base <- quantile_add(base, img)
+    all[,,ci_idx] <- img
   }
-  expect_equal(base$n, 1000L)
+  expect_equal(base$n, N)
   q <- quantiles(base)
-  gold_low <- qnorm(0.025, mean = 3.7)
-  gold_hi <- qnorm(0.025, mean = 3.7)
-  gold_med <- 3.7
-  trials <- list(c(1, 3), c(7, 4), c(i, j))
-  for (t in 1:length(trials)) {
-    ii <- trials[[t]][1]
-    jj <- trials[[t]][2]
-    low = q$lower[i, j]
-    upper = q$upper[i, j]
-    med = q$median[i, j]
-    expect_lt(relerr(gold_low, low, 3.7, 1), 0.1)
-    expect_lt(relerr(gold_hi, upper, 3.7, 1), 0.1)
-    expect_lt(relerr(gold_med, med, 3.7, 1), 0.1)
+
+  reord_all <- aperm(all, c(3, 1, 2))
+  for (jr in 1:j) {
+    for (ir in 1:i) {
+      qq <- unname(quantile(reord_all[,ir, jr], probs = c(0.025, 0.5, 0.975)))
+
+      low <- q$lower[ir, jr]
+      expect_lt(relerr(qq[1], low, avg, stdev), 0.1)
+      med <- q$median[ir, jr]
+      expect_lt(relerr(qq[2], med, avg, stdev), 0.15)
+      upper <- q$upper[ir, jr]
+      expect_lt(relerr(qq[3], upper, avg, stdev), 0.1)
+    }
   }
 })

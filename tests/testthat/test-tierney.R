@@ -41,7 +41,7 @@ test_that("tierney sorts the first set of images", {
 })
 
 
-relerr <- function(a, b, median, sigma) {
+relerr <- function(a, b, sigma) {
   abs((b - a) / sigma)
 }
 
@@ -50,7 +50,6 @@ test_that("tierney gives final estimates", {
   i <- 10
   j <- 20
   N <- 1000L
-  avg <- 3.7
   stdev <- 1.0
   base <- build_tierney(c(i, j), N)
   ci_cnt <- dim(base$buf)[1]
@@ -59,7 +58,7 @@ test_that("tierney gives final estimates", {
   # Each point gets a different mean so that we know the i,j correspond.
   means <- ((1:N) * 19937) %% 20
   for (ci_idx in 1:N) {
-    img <- array(rnorm(i*j, mean = means), dim = c(i, j))
+    img <- array(rnorm(i*j, mean = means, sd = stdev), dim = c(i, j))
     base <- quantile_add(base, img)
     all[,,ci_idx] <- img
   }
@@ -72,11 +71,11 @@ test_that("tierney gives final estimates", {
       qq <- unname(quantile(reord_all[,ir, jr], probs = c(0.025, 0.5, 0.975)))
 
       low <- q$lower[ir, jr]
-      expect_lt(relerr(qq[1], low, avg, stdev), 0.1)
+      expect_lt(relerr(qq[1], low, stdev), 0.1)
       med <- q$median[ir, jr]
-      expect_lt(relerr(qq[2], med, avg, stdev), 0.15)
+      expect_lt(relerr(qq[2], med, stdev), 0.3)
       upper <- q$upper[ir, jr]
-      expect_lt(relerr(qq[3], upper, avg, stdev), 0.1)
+      expect_lt(relerr(qq[3], upper, stdev), 0.1)
     }
   }
 })

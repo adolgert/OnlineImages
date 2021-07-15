@@ -2,18 +2,16 @@
 title: "R Notebook"
 output: html_notebook
 ---
+
+# Introduction
+
+This vignette looks at error in quantile estimation when using the stochastic approximation to the median and when using exact values for quantiles for confidence intervals. The stochastic approximation is from: Tierney, Luke. 1983. “A Space-Efficient Recursive Procedure for Estimating a Quantile of an Unknown Distribution.” SIAM Journal on Scientific and Statistical Computing. https://doi.org/10.1137/0904048.
+
 ```{r}
 library(OnlineImages)
 ```
 
-Make an error estimate that depends on the standard deviation of the distribution.
-```{r}
-relerr <- function(a, b, median, sigma) {
-  abs((b - a) / sigma)
-}
-```
-
-
+Generate 1000 sample images. Each pixel of the sample is $N(m, 1)$ where $m$ is a different mean of the Normal distribution.
 ```{r}
 i <- 10
 j <- 20
@@ -35,7 +33,7 @@ q <- quantiles(base)
 reord_all <- aperm(all, c(3, 1, 2))
 ```
 
-
+Compare each value with its quantile estimate from R. The R quantile function does interpolation, so it shouldn't agree exactly.
 ```{r}
 errval <- array(0, dim = c(3, i, j))
 for (jr in 1:j) {
@@ -51,17 +49,17 @@ for (jr in 1:j) {
 errhist <- aperm(errval, c(2, 3, 1))
 ```
 
+The lower bound is always a little too low because we take the first value past the quantile. We could amend this to interpolate the quantile by taking one more rank and doing that interpolation.
 ```{r}
 hist(errhist[,,1], main = "Error in Lower CI")
 ```
 
-
+The median has a distribution that echoes simulation results from Hurley and Modares, "Low-Storage Quantile Estimation," Computational Statistics 10:311-325, 1995. According to their simulations, there is a slightly more accurate method to do this calculation, using an empirical histogram. That would store more data and not offer a lot of advantages, from what I saw. I'm not happy with the size of the errors here, given that this is 1000 draws.
 ```{r}
 hist(errhist[,,2], main = "Error in Median")
 ```
 
-
+The upper quantile has the same behavior as the lower quantile.
 ```{r}
 hist(errhist[,,3], main = "Error in Upper CI")
 ```
-

@@ -71,15 +71,11 @@ List quantile_add(List base, NumericMatrix image) {
       for (R_xlen_t jinit = 0; jinit < jcnt; ++jinit) {
         for (R_xlen_t iinit = 0; iinit < icnt; ++iinit) {
           R_xlen_t column = dci * (iinit + icnt * jinit);
-          Rcout << "column " << column << " dci " << dci <<
-                " i " << iinit << " j " << jinit << " len " <<
-                  buf.size() << std::endl;
           NumericVector::iterator bufit = buf.begin() + column;
           NumericVector::iterator bufend = buf.begin() + column + dci;
           std::sort(bufit, bufend);  // Does this work with Rcpp pointers?
           // Set $\xi_0$ equal to the $10\alpha$th smallest of the first ten
           // observations. \xi is the median:
-          Rcout << "median " << (column + ci) << std::endl;
           double median = 0.5 * (buf(column + ci - 1), buf(column + ci));
           // Set $d_0^{-1}$ equal to the interquantile range of the first ten
           // observations (specifically to the difference between the eigth
@@ -89,19 +85,15 @@ List quantile_add(List base, NumericMatrix image) {
           // The initial estimate $\xi_0$ of $\xi$ and $d_0$, an initial
           // estimate of $f(\xi)^{-1}$, are treated as fixed; in practice they
           // can be obtained from a small preliminary sample.
-          Rcout << "col high " << (column + high) << " low " << (column + low)
-                << std::endl;
-          double fn = 0;  // Should this start at 0 or 1/d0?
           double d0 = 1.0 / (buf(column + high) - buf(column + low));
+          // The paper says this can start as 0. 1/d0 might work, too.
+          double fn = 0;
           R_xlen_t pcolumn = pc * (iinit + icnt * jinit);
-          Rcout << "pcolumn " << column << " pc " << pc << std::endl;
           param[0 + pcolumn] = median;
           param[1 + pcolumn] = fn;
           param[2 + pcolumn] = d0;
-          Rcout << "wrote params" << std::endl;
         }
       }
-      Rcout << "initialization done" << std::endl;
     }
   } else if (n < total) {
     // h_n = n^{-1/2}. This value is h_{n+1}.

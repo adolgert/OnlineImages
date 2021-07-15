@@ -68,31 +68,14 @@ List quantile_add(List base, NumericMatrix image) {
     // Once buffer is filled, use it to initialize stochastic approximation.
     // Also set up the buffer for confidence intervals.
     if (n == dci) {
-      std::vector<double> forsort(dci);
       for (R_xlen_t jinit = 0; jinit < jcnt; ++jinit) {
         for (R_xlen_t iinit = 0; iinit < icnt; ++iinit) {
           R_xlen_t column = dci * (iinit + icnt * jinit);
-          Rcout << "column " << column << " dci " << dci <<
-                " i " << iinit << " j " << jinit << " len " <<
-                  buf.size() << std::endl;
-          for (R_xlen_t cpidx=0; cpidx < dci; ++cpidx) {
-            forsort[cpidx] = buf(column + cpidx);
-          }
-          std::sort(forsort.begin(), forsort.end());
-          Rcout << "sorting" << std::endl;
-          for (R_xlen_t ridx=0; ridx < dci; ++ridx) {
-            if (column + ridx >= buf.size()) {
-              stop("col is greater than buffer size");
-            }
-            Rcout << "writing to " << (column + ridx) << std::endl;
-            buf[column + ridx] = forsort[ridx];
-          }
-          //NumericVector::iterator bufit = buf.begin() + column;
-          //NumericVector::iterator bufend = buf.begin() + column + dci;
-          //std::sort(bufit, bufend);  // Does this work with Rcpp pointers?
+          NumericVector::iterator bufit = buf.begin() + column;
+          NumericVector::iterator bufend = buf.begin() + column + dci;
+          std::sort(bufit, bufend);  // Does this work with Rcpp pointers?
           // Set $\xi_0$ equal to the $10\alpha$th smallest of the first ten
           // observations. \xi is the median:
-          Rcout << "median " << (column + ci) << std::endl;
           double median = 0.5 * (buf(column + ci - 1), buf(column + ci));
           // Set $d_0^{-1}$ equal to the interquantile range of the first ten
           // observations (specifically to the difference between the eigth
@@ -102,19 +85,15 @@ List quantile_add(List base, NumericMatrix image) {
           // The initial estimate $\xi_0$ of $\xi$ and $d_0$, an initial
           // estimate of $f(\xi)^{-1}$, are treated as fixed; in practice they
           // can be obtained from a small preliminary sample.
-          Rcout << "col high " << (column + high) << " low " << (column + low)
-                << std::endl;
-          double fn = 0;  // Should this start at 0 or 1/d0?
-          double d0 = 1.0 / buf(column + high) - buf(column + low);
+          double d0 = 1.0 / (buf(column + high) - buf(column + low));
+          // The paper says this can start as 0. 1/d0 might work, too.
+          double fn = 0;
           R_xlen_t pcolumn = pc * (iinit + icnt * jinit);
-          Rcout << "pcolumn " << column << " pc " << pc << std::endl;
           param[0 + pcolumn] = median;
           param[1 + pcolumn] = fn;
           param[2 + pcolumn] = d0;
-          Rcout << "wrote params" << std::endl;
         }
       }
-      Rcout << "initialization done" << std::endl;
     }
   } else if (n < total) {
     // h_n = n^{-1/2}. This value is h_{n+1}.
@@ -147,11 +126,11 @@ List quantile_add(List base, NumericMatrix image) {
 
         // Then do the CI at the boundaries.
         // Here we keep every value that is lower (or higher) rank.
-        double max_low = param(ci - 1 + poffset);
-        double min_high = param(ci + poffset);
+        double max_low = buf(ci - 1 + boffset);
+        double min_high = buf(ci + boffset);
         if (x < max_low) {
           // Add x to the lower C.I.
-          buf[boffset + ci - 1] = x;
+          buf[ci - 1 + boffset] = x;
           // Swap max value of lower C.I. to the last rank, but leave rest
           // unsorted.
           NumericVector::iterator bufit = buf.begin() + boffset;
@@ -164,7 +143,7 @@ List quantile_add(List base, NumericMatrix image) {
 
         } else if (x > min_high) {
           // Add x to the higher C.I.
-          buf[boffset + ci] = x;
+          buf[ci + boffset] = x;
           // Swap min value of C.I. to the first rank, but leave rest alone.
           NumericVector::iterator bufit = buf.begin() + boffset + ci;
           auto next_min_iter = std::min_element(bufit, bufit + ci);

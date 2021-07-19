@@ -22,33 +22,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// sample_matrix
-IntegerVector sample_matrix(IntegerVector deep);
-RcppExport SEXP _OnlineImages_sample_matrix(SEXP deepSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type deep(deepSEXP);
-    rcpp_result_gen = Rcpp::wrap(sample_matrix(deep));
-    return rcpp_result_gen;
-END_RCPP
-}
-// iter_matrix
-IntegerVector iter_matrix(IntegerVector deep);
-RcppExport SEXP _OnlineImages_iter_matrix(SEXP deepSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type deep(deepSEXP);
-    rcpp_result_gen = Rcpp::wrap(iter_matrix(deep));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_OnlineImages_quantile_add", (DL_FUNC) &_OnlineImages_quantile_add, 2},
-    {"_OnlineImages_sample_matrix", (DL_FUNC) &_OnlineImages_sample_matrix, 1},
-    {"_OnlineImages_iter_matrix", (DL_FUNC) &_OnlineImages_iter_matrix, 1},
     {NULL, NULL, 0}
 };
 

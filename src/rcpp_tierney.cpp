@@ -71,7 +71,7 @@ List quantile_add(List base, NumericMatrix image) {
 
       if (n < dci) {
         buf[n + boffset] = x;
-        n += 1;
+        n++;
         param[3 + poffset] = n;
 
         if (n == dci) {
@@ -118,6 +118,7 @@ List quantile_add(List base, NumericMatrix image) {
         double xi1 = xi - (dn / (n + 1)) * (Z - alpha);
         param[0 + poffset] = xi1;
         param[1 + poffset] = fn1;
+        param[3 + poffset] = n + 1;
 
         // Then do the CI at the boundaries.
         // Here we keep every value that is lower (or higher) rank.
@@ -155,6 +156,7 @@ List quantile_add(List base, NumericMatrix image) {
 
   return List::create(
     Named("alpha") = base["alpha"],
+    Named("level") = base["level"],
     Named("n") = ntotal,
     Named("total") = base["total"],
     Named("param") = param,

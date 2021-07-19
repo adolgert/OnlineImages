@@ -20,6 +20,13 @@ quantiles <- function(base) {
 #' times with `quantile_add(obj, image)`, where image has
 #' `dims=extent`.
 #'
+#' This returns a list, where `alpha` is the median quantile,
+#' `n` is the number of images seen so far, `total` is the total
+#' above, `param` is three-dimensional, with four main components,
+#' 1: median, 2: fn from the paper, 3: d0 from the paper and 4: number of
+#' non-NaN images seen for this pixel. Then the `buf` element is a stack of
+#' images which are the lowest and highest in rank, to determine the C.I.
+#'
 #' @export
 build_tierney <- function(extent, total, level = 95) {
   edge = 0.5 * (100 - level) / 100
@@ -28,7 +35,7 @@ build_tierney <- function(extent, total, level = 95) {
     alpha = 0.5,  # median quantile
     n = 0L,  # Number of images seen.
     total = as.integer(total),  # Total number off images expected.
-    param = array(0, dim = c(3, extent)),
+    param = array(0, dim = c(4, extent)),
     buf = array(0, dim = c(2 * ci, extent))
   )
 }

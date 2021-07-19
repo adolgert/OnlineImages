@@ -1,6 +1,11 @@
 
 #' Retrieve median and confidence intervals.
 #' @param base A Tierney quantile estimator.
+#'
+#' If every image had a NaN for a pixel, that pixel's quantiles will be all NaN.
+#' If the pixel had some NaN values, the quantiles will be adjusted to account
+#' for those fewer values.
+#'
 #' @export
 quantiles <- function(base) {
   ci <- dim(base$buf)[1] %/% 2
@@ -58,6 +63,7 @@ quantiles <- function(base) {
 #' 1: median, 2: fn from the paper, 3: d0 from the paper and 4: number of
 #' non-NaN images seen for this pixel. Then the `buf` element is a stack of
 #' images which are the lowest and highest in rank, to determine the C.I.
+#' The `level` argument is stored, too.
 #'
 #' @export
 build_tierney <- function(extent, total, level = 95) {
@@ -72,33 +78,4 @@ build_tierney <- function(extent, total, level = 95) {
     param = array(0, dim = c(4, extent)),
     buf = array(0, dim = c(2 * ci, extent))
   )
-}
-
-
-#' Trial of the package.
-#'
-#' @export
-trial <- function() {
-  # Image dimensions
-  i <- 10
-  j <- 20
-  base <- build_tierney(c(i, j), 1000L)
-  img <- array(0, dim = c(i, j))
-  base2 <- quantile_add(base, img)
-}
-
-
-trial2 <- function() {
-  extent <- c(3, 5, 4)
-  deep <- array(0, dim = extent);
-  outbound <- sample_matrix(deep);
-  outbound
-}
-
-
-trial3 <- function() {
-  extent <- c(3, 5, 4)
-  deep <- array(0, dim = extent);
-  outbound <- iter_matrix(deep);
-  outbound
 }

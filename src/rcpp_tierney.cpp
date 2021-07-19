@@ -3,6 +3,8 @@
 #include<Rcpp.h>
 using namespace Rcpp;
 
+// [[Rcpp::plugins("cpp11")]]
+
 // This file calculates quantiles for a set of images.
 // The main feature of these functions is that they estimate the
 // median and calculate confidence intervals without storing
@@ -15,9 +17,13 @@ using namespace Rcpp;
 //
 // The CI quantiles are calculated exactly by keeping all whose rank is
 // outside the bounds of the confidence interval on each side.
-//
-// [[Rcpp::plugins("cpp11")]]
 
+//' Add an image to the stack from which to compute quantiles.
+//'
+//' @param base The object that `build_tierney` made.
+//' @param image A two-dimensional array of numeric. Can include NaN values.
+//' @return A modified base object, that you pass in the next time.
+//'
 // [[Rcpp::export]]
 List quantile_add(List base, NumericMatrix image) {
   int irow = image.nrow();
@@ -162,51 +168,4 @@ List quantile_add(List base, NumericMatrix image) {
     Named("param") = param,
     Named("buf") = buf
   );
-}
-
-
-// Teach me about writing in the correct order.
-// [[Rcpp::export]]
-IntegerVector sample_matrix(IntegerVector deep) {
-  IntegerVector buf_dim = deep.attr("dim");
-  assert(buf_dim.size() == 3);
-  R_xlen_t n = buf_dim(0);
-  R_xlen_t icnt = buf_dim(1);
-  R_xlen_t jcnt = buf_dim(2);
-  int cnt = 0;
-  for (R_xlen_t jidx = 0; jidx < jcnt; jidx++) {
-    for (R_xlen_t iidx = 0; iidx < icnt; iidx++) {
-      for (R_xlen_t nidx = 0; nidx < n; nidx++) {
-        R_xlen_t offset = nidx + n * iidx + n * icnt * jidx;
-        deep[offset] = cnt;
-        cnt++;
-      }
-    }
-  }
-  return(deep);
-}
-
-
-// Teach me how Rcpp iterators work for writing to the iterator.
-// [[Rcpp::export]]
-IntegerVector iter_matrix(IntegerVector deep) {
-  IntegerVector buf_dim = deep.attr("dim");
-  assert(buf_dim.size() == 3);
-  R_xlen_t n = buf_dim(0);
-  R_xlen_t icnt = buf_dim(1);
-  R_xlen_t jcnt = buf_dim(2);
-  int cnt = 0;
-
-  IntegerVector::iterator diter = deep.begin();
-  for (R_xlen_t jidx = 0; jidx < jcnt; jidx++) {
-    for (R_xlen_t iidx = 0; iidx < icnt; iidx++) {
-      IntegerVector::iterator coliter = diter;
-      for (R_xlen_t nidx = 0; nidx < n; nidx++) {
-        *diter = cnt;
-        diter++;
-      }
-//diter += n;
-    }
-  }
-  return(deep);
 }

@@ -7,7 +7,11 @@
 quantiles(base)
 }
 \arguments{
-\item{base}{A Tierney quantile estimator.}
+\item{base}{A Tierney quantile estimator.
+
+If every image had a NaN for a pixel, that pixel's quantiles will be all NaN.
+If the pixel had some NaN values, the quantiles will be adjusted to account
+for those fewer values.}
 }
 \description{
 Retrieve median and confidence intervals.

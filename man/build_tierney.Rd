@@ -11,11 +11,19 @@ build_tierney(extent, total, level = 95)
 
 \item{total}{The total number of images from which to calculate quantiles.}
 
-\item{level}{The confidence interval, e.g. 95 or 90.
+\item{level}{The confidence interval (C.I.), e.g. 95 or 90.
 
 Once you build the object, it expects to be called `total`
 times with `quantile_add(obj, image)`, where image has
-`dims=extent`.}
+`dims=extent`.
+
+This returns a list, where `alpha` is the median quantile,
+`n` is the number of images seen so far, `total` is the total
+above, `param` is three-dimensional, with four main components,
+1: median, 2: fn from the paper, 3: d0 from the paper and 4: number of
+non-NaN images seen for this pixel. Then the `buf` element is a stack of
+images which are the lowest and highest in rank, to determine the C.I.
+The `level` argument is stored, too.}
 }
 \description{
 Create an object to gather quantiles.
